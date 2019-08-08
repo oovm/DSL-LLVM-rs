@@ -1,4 +1,3 @@
-
 #[allow(dead_code)]
 #[grammar = "typescript.pest"]
 pub struct Parser;

@@ -1,0 +1,39 @@
+program = _{SOI~statement* ~ EOI}
+statement  = _{
+    EmptyStatement
+  | DeclareStatement ~eos?
+  | literal ~ eos?
+}
+/*====================================================================================================================*/
+EmptyStatement = {eos}
+eos            = {Semicolon}
+comma_or_semi = _{Comma|Semicolon}
+Semicolon =@{";"}
+Comma = @{","}
+/*====================================================================================================================*/
+DeclareStatement = _{Undefined}
+/*====================================================================================================================*/
+data = {literal}
+literal = _{Boolean|Null|Undefined|SYMBOL}
+/*====================================================================================================================*/
+//!#D19A66: True|False
+Boolean = !{ True | False }
+True = @{"true"}
+False =@{"false"}
+/*====================================================================================================================*/
+//!#D19A66: Null|Undefined
+Null = @{"null"}
+Undefined = @{"undefined"}
+/*====================================================================================================================*/
+///#E5C07B
+SYMBOL = @{NameStartCharacter~ NameCharacter*}
+NameCharacter = _{ASCII_DIGIT| NameStartCharacter}
+NameStartCharacter = _{Dollar|Underline | ASCII_ALPHA}
+Underline= @{"_"}
+Dollar = @{"$"}
+/*====================================================================================================================*/
+WHITESPACE = _{NEWLINE|SPACE_SEPARATOR}
+SPACE_SEPARATOR = {" "|"\t"}
+NEWLINE = @{CR ~ LF|CR|LF}
+CR = @{"\r"}
+LF = @{"\n"}
