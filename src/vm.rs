@@ -1,21 +1,37 @@
 use std::error::Error;
+use crate::value::Any;
+use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum ErrorCode {
-    Return = 0,
-    LoopBreak = 1,
-    FunctionNotFound = 100, //Uncaught ReferenceError
-    VariableNotFound = 101, //Uncaught ReferenceError
+    Return(Box<Any>),
+    LoopBreak,
+    FunctionNotFound(String),
+    VariableNotFound(String),
+}
+
+/// Used for impl `Error`
+impl Display for ErrorCode {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            ErrorCode::Return(s) => {
+                write!(f, "{}: {:?}", self.description(), s)
+            }
+            _ => {
+                write!(f, "{}", self.description())
+            }
+        }
+    }
 }
 
 impl Error for ErrorCode {
     fn description(&self) -> &str {
         match *self {
-            ErrorCode::Return => "No error found and normally return",
+            ErrorCode::Return(_) => "No error found and normally return",
             ErrorCode::LoopBreak => "Loop broken before completion",
 
-            ErrorCode::FunctionNotFound => "Function not found",
-            ErrorCode::VariableNotFound => "Variable not found",
+            ErrorCode::FunctionNotFound(_) => "Function not found",
+            ErrorCode::VariableNotFound(_) => "Variable not found",
         }
     }
 
