@@ -47,7 +47,7 @@ Number = _{Exponent|Decimal|DecimalBad|Integer}
 Decimal = ${Integer ~Dot~ ASCII_DIGIT+}
 DecimalBad = ${Integer~Dot|Dot~ASCII_DIGIT+}
 Exponent = ${(Decimal|Integer) ~E~ (Decimal|Integer)}
-Integer = @{ASCII_NONZERO_DIGIT ~ (Underline? ~ ASCII_NONZERO_DIGIT)*|Zero}
+Integer = @{ASCII_DIGIT ~ (Underline? ~ ASCII_DIGIT)*}
 Dot = @{"."}
 E = _{"E"|"e"}
 /*====================================================================================================================*/
