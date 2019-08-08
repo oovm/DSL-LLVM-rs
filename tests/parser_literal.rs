@@ -27,3 +27,66 @@ fn symbol_dollar() {
     token_print(TEXT, Rule::program);
     //panic!()
 }
+
+#[test]
+fn integer_zero() {
+    const TEXT: &str = "0";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn integer_nonzero() {
+    const TEXT: &str = "18446744073709551616"; // will not panic in lexer
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn integer_leading_zero() {
+    const TEXT: &str = "01"; // TODO: This is wrong in js
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn integer_0x() {
+    const TEXT: &str = "0x0f";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn integer_0o() {
+    const TEXT: &str = "0x07";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn integer_0b() {
+    const TEXT: &str = "0x01";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn float() {
+    const TEXT: &str = "0.0";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn float_bad_dot() {
+    const TEXT: &str = ".0";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn float_bad_integer() {
+    const TEXT: &str = "0.";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
