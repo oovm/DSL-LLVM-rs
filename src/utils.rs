@@ -25,3 +25,14 @@ pub fn token_print(s: &str, rule: Rule) {
         }
     }
 }
+
+pub fn parse(s: &str) -> AST {
+    let pairs = Parser::parse(Rule::program, s).unwrap_or_else(|e| panic!("{}", e));
+    let stack: Vec<AST> = vec![];
+    for pair in pairs {
+        match pair.as_rule() {
+            _ => println!("unimplemented: {:?}", pair.as_rule()),
+        }
+    }
+    AST::Null
+}
