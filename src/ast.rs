@@ -14,10 +14,32 @@ pub enum AST {
     /// - `Integer` : A 64-bit integer, not like js
     Integer(i64),
 
-    /// - `Symbol`
+    /// - `Symbol`: A string used as id
     Symbol(String),
     /// - `Function`: ???
     Function(),
 
-    Stack(Vec<AST>),
+    Array(Vec<AST>),
+    Hashmap(),
+
+    /// - `Stack`: ???
+    Stack(Vec<AST>), // not slice!
+}
+
+impl From<&str> for AST {
+    fn from(s: &str) -> Self {
+        AST::String(s.to_string())
+    }
+}
+
+impl From<i64> for AST {
+    fn from(i: i64) -> Self {
+        AST::Integer(i)
+    }
+}
+
+impl From<f64> for AST {
+    fn from(i: f64) -> Self {
+        AST::Decimal(i)
+    }
 }

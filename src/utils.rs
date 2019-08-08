@@ -82,10 +82,9 @@ fn parse_float(pair: Pair<Rule>) -> AST {
 fn parse_string(pair: Pair<Rule>) -> AST {
     let i = pair.as_str();
     let s = &i[1..i.len() - 1];
-    AST::String(s)
+    AST::String(s.to_string())
 }
 
-
 fn parse_symbol(pair: Pair<Rule>) -> AST {
-    AST::Symbol(pair.as_str())
+    AST::Symbol(pair.to_string())
 }

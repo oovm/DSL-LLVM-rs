@@ -45,7 +45,7 @@ fn integer_nonzero() {
 #[test]
 fn integer_leading_zero() {
     const TEXT: &str = "01"; // TODO: This is wrong in js
-    let result = AST::Stack([AST::Integer(1)].to_vec());
+    let result = AST::Stack([AST::from(1)].to_vec());
     assert_eq!(parse(TEXT), result)
 }
 
@@ -73,34 +73,34 @@ fn integer_0b() {
 #[test]
 fn float() {
     const TEXT: &str = "0.0";
-    let result = AST::Stack([AST::Decimal(0.0)].to_vec());
+    let result = AST::Stack([AST::from(0.0)].to_vec());
     assert_eq!(parse(TEXT), result)
 }
 
 #[test]
 fn float_bad_dot() {
     const TEXT: &str = ".0";
-    let result = AST::Stack([AST::Decimal(0.0)].to_vec());
+    let result = AST::Stack([AST::from(0.0)].to_vec());
     assert_eq!(parse(TEXT), result)
 }
 
 #[test]
 fn float_bad_integer() {
     const TEXT: &str = "0.";
-    let result = AST::Stack([AST::Decimal(0.0)].to_vec());
+    let result = AST::Stack([AST::from(0.0)].to_vec());
     assert_eq!(parse(TEXT), result)
 }
 
 #[test]
 fn string_single() {
     const TEXT: &str = "\"'\"";
-    let result = AST::Stack([AST::String("'")].to_vec());
+    let result = AST::Stack([AST::from("'")].to_vec());
     assert_eq!(parse(TEXT), result)
 }
 
 #[test]
 fn string_double() {
     const TEXT: &str = "'\"'";
-    let result = AST::Stack([AST::String("\"")].to_vec());
+    let result = AST::Stack([AST::from("\"")].to_vec());
     assert_eq!(parse(TEXT), result)
 }
