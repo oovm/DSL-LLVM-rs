@@ -38,7 +38,7 @@ pub fn parse(s: &str) -> AST {
         match pair.as_rule() {
             Rule::EOI => (),
             Rule::Integer => push!(parse_integer),
-            Rule::Decimal | Rule::DecimalBad => push!(parse_float),
+            Rule::Decimal | Rule::DecimalBad | Rule::Exponent => push!(parse_float),
             Rule::SingleEscape | Rule::DoubleEscape => push!(parse_string),
             Rule::SYMBOL => push!(parse_symbol),
             _ => println!("unimplemented: {:?}", pair.as_rule()),

@@ -92,6 +92,13 @@ fn float_bad_integer() {
 }
 
 #[test]
+fn float_exp() {
+    const TEXT: &str = "2e5";
+    let result = AST::Stack([AST::from(200000.0)].to_vec());
+    assert_eq!(parse(TEXT), result)
+}
+
+#[test]
 fn string_single() {
     const TEXT: &str = "\"'\"";
     let result = AST::Stack([AST::from("'")].to_vec());

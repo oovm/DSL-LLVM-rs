@@ -85,6 +85,13 @@ fn float_bad_dot() {
 }
 
 #[test]
+fn float_exp() {
+    const TEXT: &str = "2e5";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
 fn float_bad_integer() {
     const TEXT: &str = "0.";
     token_print(TEXT, Rule::program);
