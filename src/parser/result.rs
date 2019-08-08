@@ -41,6 +41,11 @@ pub enum Rule {
     Integer,
     Dot,
     E,
+    String,
+    DoubleEscape,
+    SingleEscape,
+    S1,
+    S2,
     WHITESPACE,
     SPACE_SEPARATOR,
     NEWLINE,
@@ -210,6 +215,26 @@ impl ::std::fmt::Debug for Rule {
             }
             (&Rule::E,) => {
                 let mut debug_trait_builder = f.debug_tuple("E");
+                debug_trait_builder.finish()
+            }
+            (&Rule::String,) => {
+                let mut debug_trait_builder = f.debug_tuple("String");
+                debug_trait_builder.finish()
+            }
+            (&Rule::DoubleEscape,) => {
+                let mut debug_trait_builder = f.debug_tuple("DoubleEscape");
+                debug_trait_builder.finish()
+            }
+            (&Rule::SingleEscape,) => {
+                let mut debug_trait_builder = f.debug_tuple("SingleEscape");
+                debug_trait_builder.finish()
+            }
+            (&Rule::S1,) => {
+                let mut debug_trait_builder = f.debug_tuple("S1");
+                debug_trait_builder.finish()
+            }
+            (&Rule::S2,) => {
+                let mut debug_trait_builder = f.debug_tuple("S2");
                 debug_trait_builder.finish()
             }
             (&Rule::WHITESPACE,) => {
@@ -449,6 +474,7 @@ impl ::pest::Parser<Rule> for Parser {
                         .or_else(|state| self::Byte(state))
                         .or_else(|state| self::Number(state))
                         .or_else(|state| self::SYMBOL(state))
+                        .or_else(|state| self::String(state))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -763,9 +789,9 @@ impl ::pest::Parser<Rule> for Parser {
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
                     state.rule(Rule::Integer, |state| {
                         state.atomic(::pest::Atomicity::Atomic, |state| {
-                            self::Zero(state).or_else(|state| {
-                                state.sequence(|state| {
-                                    self::ASCII_DIGIT(state).and_then(|state| {
+                            state
+                                .sequence(|state| {
+                                    self::ASCII_NONZERO_DIGIT(state).and_then(|state| {
                                         state.repeat(|state| {
                                             state.sequence(|state| {
                                                 state
@@ -777,7 +803,7 @@ impl ::pest::Parser<Rule> for Parser {
                                         })
                                     })
                                 })
-                            })
+                                .or_else(|state| self::Zero(state))
                         })
                     })
                 }
@@ -798,6 +824,73 @@ impl ::pest::Parser<Rule> for Parser {
                     state
                         .match_string("E")
                         .or_else(|state| state.match_string("e"))
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn String(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    self::SingleEscape(state).or_else(|state| self::DoubleEscape(state))
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn DoubleEscape(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| {
+                        state.rule(Rule::DoubleEscape, |state| {
+                            state.sequence(|state| {
+                                self::S2(state)
+                                    .and_then(|state| {
+                                        state.repeat(|state| {
+                                            state.sequence(|state| {
+                                                state
+                                                    .lookahead(false, |state| self::S2(state))
+                                                    .and_then(|state| self::ANY(state))
+                                            })
+                                        })
+                                    })
+                                    .and_then(|state| self::S2(state))
+                            })
+                        })
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn SingleEscape(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| {
+                        state.rule(Rule::SingleEscape, |state| {
+                            state.sequence(|state| {
+                                self::S1(state)
+                                    .and_then(|state| {
+                                        state.repeat(|state| {
+                                            state.sequence(|state| {
+                                                state
+                                                    .lookahead(false, |state| self::S1(state))
+                                                    .and_then(|state| self::ANY(state))
+                                            })
+                                        })
+                                    })
+                                    .and_then(|state| self::S1(state))
+                            })
+                        })
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn S1(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_string("\'")
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn S2(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_string("\"")
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -853,10 +946,45 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn EOI(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::EOI, |state| state.end_of_input())
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
                 pub fn ASCII_OCT_DIGIT(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
                     state.match_range('0'..'7')
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn SOI(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.start_of_input()
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ANY(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.skip(1)
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ASCII_NONZERO_DIGIT(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_range('1'..'9')
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ASCII_DIGIT(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_range('0'..'9')
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -869,10 +997,10 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_NONZERO_DIGIT(
+                pub fn ASCII_BIN_DIGIT(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('1'..'9')
+                    state.match_range('0'..'1')
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -883,34 +1011,6 @@ impl ::pest::Parser<Rule> for Parser {
                         .match_range('0'..'9')
                         .or_else(|state| state.match_range('a'..'f'))
                         .or_else(|state| state.match_range('A'..'F'))
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn EOI(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::EOI, |state| state.end_of_input())
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn SOI(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.start_of_input()
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_BIN_DIGIT(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('0'..'1')
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_DIGIT(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('0'..'9')
                 }
             }
             pub use self::visible::*;
@@ -951,6 +1051,11 @@ impl ::pest::Parser<Rule> for Parser {
             Rule::Integer => rules::Integer(state),
             Rule::Dot => rules::Dot(state),
             Rule::E => rules::E(state),
+            Rule::String => rules::String(state),
+            Rule::DoubleEscape => rules::DoubleEscape(state),
+            Rule::SingleEscape => rules::SingleEscape(state),
+            Rule::S1 => rules::S1(state),
+            Rule::S2 => rules::S2(state),
             Rule::WHITESPACE => rules::WHITESPACE(state),
             Rule::SPACE_SEPARATOR => rules::SPACE_SEPARATOR(state),
             Rule::NEWLINE => rules::NEWLINE(state),

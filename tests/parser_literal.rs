@@ -90,3 +90,17 @@ fn float_bad_integer() {
     token_print(TEXT, Rule::program);
     //panic!()
 }
+
+#[test]
+fn string_single() {
+    const TEXT: &str = "\"'\"";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
+
+#[test]
+fn string_double() {
+    const TEXT: &str = "'\"'";
+    token_print(TEXT, Rule::program);
+    //panic!()
+}
