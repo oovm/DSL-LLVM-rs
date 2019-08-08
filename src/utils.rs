@@ -4,8 +4,8 @@ use crate::{Parser, Rule, AST};
 use colored::*;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser as Pest;
-use std::str::FromStr;
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 #[cfg(feature = "colored")]
 pub fn token_print(s: &str, rule: Rule) {
@@ -39,6 +39,8 @@ pub fn parse(s: &str) -> AST {
             Rule::EOI => (),
             Rule::Integer => push!(parse_integer),
             Rule::Decimal | Rule::DecimalBad => push!(parse_float),
+            Rule::SingleEscape | Rule::DoubleEscape => push!(parse_string),
+            Rule::SYMBOL => push!(parse_symbol),
             _ => println!("unimplemented: {:?}", pair.as_rule()),
         }
     }
@@ -75,4 +77,15 @@ fn parse_float(pair: Pair<Rule>) -> AST {
             panic!(e)
         }
     }
+}
+
+fn parse_string(pair: Pair<Rule>) -> AST {
+    let i = pair.as_str();
+    let s = &i[1..i.len() - 1];
+    AST::String(s)
+}
+
+
+fn parse_symbol(pair: Pair<Rule>) -> AST {
+    AST::Symbol(pair.as_str())
 }

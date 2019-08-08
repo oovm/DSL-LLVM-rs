@@ -789,21 +789,17 @@ impl ::pest::Parser<Rule> for Parser {
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
                     state.rule(Rule::Integer, |state| {
                         state.atomic(::pest::Atomicity::Atomic, |state| {
-                            state
-                                .sequence(|state| {
-                                    self::ASCII_NONZERO_DIGIT(state).and_then(|state| {
-                                        state.repeat(|state| {
-                                            state.sequence(|state| {
-                                                state
-                                                    .optional(|state| self::Underline(state))
-                                                    .and_then(|state| {
-                                                        self::ASCII_NONZERO_DIGIT(state)
-                                                    })
-                                            })
+                            state.sequence(|state| {
+                                self::ASCII_DIGIT(state).and_then(|state| {
+                                    state.repeat(|state| {
+                                        state.sequence(|state| {
+                                            state
+                                                .optional(|state| self::Underline(state))
+                                                .and_then(|state| self::ASCII_DIGIT(state))
                                         })
                                     })
                                 })
-                                .or_else(|state| self::Zero(state))
+                            })
                         })
                     })
                 }
@@ -946,6 +942,13 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn SOI(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.start_of_input()
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
                 pub fn EOI(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
@@ -953,17 +956,13 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_OCT_DIGIT(
+                pub fn ASCII_HEX_DIGIT(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('0'..'7')
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn SOI(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.start_of_input()
+                    state
+                        .match_range('0'..'9')
+                        .or_else(|state| state.match_range('a'..'f'))
+                        .or_else(|state| state.match_range('A'..'F'))
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -974,10 +973,17 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_NONZERO_DIGIT(
+                pub fn ASCII_BIN_DIGIT(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('1'..'9')
+                    state.match_range('0'..'1')
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ASCII_OCT_DIGIT(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_range('0'..'7')
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -994,23 +1000,6 @@ impl ::pest::Parser<Rule> for Parser {
                     state
                         .match_range('a'..'z')
                         .or_else(|state| state.match_range('A'..'Z'))
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_BIN_DIGIT(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('0'..'1')
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_HEX_DIGIT(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state
-                        .match_range('0'..'9')
-                        .or_else(|state| state.match_range('a'..'f'))
-                        .or_else(|state| state.match_range('A'..'F'))
                 }
             }
             pub use self::visible::*;
