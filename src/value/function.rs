@@ -4,8 +4,8 @@ use crate::vm::ErrorCode;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct FnType {
-    ident: String,
+    id: String,
     args: Option<Vec<TypeId>>,
 }
 
-pub type FnAny = Fn(Vec<&mut Any>) -> Result<Box<Any>, ErrorCode>;
+pub type FnAny = dyn Fn(Vec<&mut dyn Any>) -> Result<Box<dyn Any>, ErrorCode>;

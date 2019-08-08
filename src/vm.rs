@@ -1,10 +1,11 @@
-use std::error::Error;
 use crate::value::Any;
+use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum ErrorCode {
-    Return(Box<Any>),
+    Return(Box<dyn Any>),
     LoopBreak,
     FunctionNotFound(String),
     VariableNotFound(String),
@@ -14,12 +15,11 @@ pub enum ErrorCode {
 impl Display for ErrorCode {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            ErrorCode::Return(s) => {
-                write!(f, "{}: {:?}", self.description(), s)
+            ErrorCode::Return(s) => write!(f, "{}: {:?}", self.description(), s),
+            ErrorCode::FunctionNotFound(s) | ErrorCode::VariableNotFound(s) => {
+                write!(f, "{}: {}", self.description(), s)
             }
-            _ => {
-                write!(f, "{}", self.description())
-            }
+            _ => write!(f, "{}", self.description()),
         }
     }
 }
@@ -35,7 +35,7 @@ impl Error for ErrorCode {
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         None
     }
 }
