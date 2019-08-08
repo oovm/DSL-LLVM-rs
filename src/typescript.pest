@@ -1,25 +1,25 @@
 program = _{SOI~statement* ~ EOI}
-statement  = _{
+statement = _{
     EmptyStatement
   | DeclareStatement ~eos?
   | literal ~ eos?
 }
 /*====================================================================================================================*/
 EmptyStatement = {eos}
-eos            = {Semicolon}
+eos = {Semicolon}
 comma_or_semi = _{Comma|Semicolon}
-Semicolon =@{";"}
+Semicolon = @{";"}
 Comma = @{","}
 /*====================================================================================================================*/
 DeclareStatement = _{Undefined}
 /*====================================================================================================================*/
 data = {literal}
-literal = _{Boolean|Null|Undefined|SYMBOL}
+literal = _{Boolean|Null|Undefined|Byte|Number|SYMBOL|String}
 /*====================================================================================================================*/
 //!#D19A66: True|False
-Boolean = !{ True | False }
+Boolean = !{ True|False }
 True = @{"true"}
-False =@{"false"}
+False = @{"false"}
 /*====================================================================================================================*/
 //!#D19A66: Null|Undefined
 Null = @{"null"}
@@ -27,10 +27,36 @@ Undefined = @{"undefined"}
 /*====================================================================================================================*/
 ///#E5C07B
 SYMBOL = @{NameStartCharacter~ NameCharacter*}
-NameCharacter = _{ASCII_DIGIT| NameStartCharacter}
-NameStartCharacter = _{Dollar|Underline | ASCII_ALPHA}
-Underline= @{"_"}
+NameCharacter = _{ASCII_DIGIT|NameStartCharacter}
+NameStartCharacter = _{Dollar|Underline|ASCII_ALPHA}
+Underline = @{"_"}
 Dollar = @{"$"}
+/*====================================================================================================================*/
+//!#D19A66: Byte_BIN|Byte_OCT|Byte_HEX
+Byte = _{Byte_BIN|Byte_OCT|Byte_HEX}
+Byte_BIN = ${ Zero ~ B ~ (Underline? ~ ASCII_BIN_DIGIT)+ }
+Byte_OCT = ${ Zero ~ O ~ (Underline? ~ ASCII_OCT_DIGIT)+ }
+Byte_HEX = ${ Zero ~ X ~ (Underline? ~ ASCII_HEX_DIGIT)+ }
+Zero = _{"0"}
+B = _{"B"|"b"}
+O = _{"O"|"o"}
+X = _{"X"|"x"}
+/*====================================================================================================================*/
+//!#D19A66: Integer|Decimal|DecimalBad|Exponent
+Number = _{Exponent|Decimal|DecimalBad|Integer}
+Decimal = ${Integer ~Dot~ ASCII_DIGIT+}
+DecimalBad = ${Integer~Dot|Dot~ASCII_DIGIT+}
+Exponent = ${(Decimal|Integer) ~E~ (Decimal|Integer)}
+Integer = @{ASCII_NONZERO_DIGIT ~ (Underline? ~ ASCII_NONZERO_DIGIT)*|Zero}
+Dot = @{"."}
+E = _{"E"|"e"}
+/*====================================================================================================================*/
+//!#98C379: DoubleEscape|SingleEscape
+String = _{SingleEscape|DoubleEscape} //TODO: 字符串表达式
+DoubleEscape = ${ S2 ~ (!S2~ ANY)* ~ S2 }
+SingleEscape = ${ S1 ~ (!S1~ ANY)* ~ S1 }
+S1 = _{"'"}
+S2 = _{"\""}
 /*====================================================================================================================*/
 WHITESPACE = _{NEWLINE|SPACE_SEPARATOR}
 SPACE_SEPARATOR = {" "|"\t"}
