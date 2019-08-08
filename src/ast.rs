@@ -5,12 +5,17 @@ pub enum AST {
     /// - `undefined`: It just like a dream
     Undefined,
 
-    /// - `String`
-    String(),
-    /// - `Boolean`
-    Boolean(),
-    /// - `Number`
-    Number(),
-    /// - `Integer`
-    Integer(),
+    /// - `String`: A rust standard string
+    String(String),
+    /// - `Boolean`: true of false, this is a problem
+    Boolean(bool),
+    /// `Number`: A 64-bit floating point number, just like js
+    Number(f64),
+    /// - `Integer` : A 64-bit integer, not like js
+    Integer(i64),
+
+    /// - `Symbol`
+    Symbol(String),
+    /// - `Function`: ???
+    Function(),
 }

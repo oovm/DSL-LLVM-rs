@@ -1,3 +1,4 @@
+
 #[allow(dead_code)]
 #[grammar = "typescript.pest"]
 pub struct Parser;
@@ -8,17 +9,27 @@ pub enum Rule {
     EOI,
     program,
     statement,
-    empty_statement,
+    EmptyStatement,
     eos,
     comma_or_semi,
     Semicolon,
     Comma,
-    declare_statement,
+    DeclareStatement,
     Boolean,
     True,
     False,
     Null,
     Undefined,
+    SYMBOL,
+    NameCharacter,
+    NameStartCharacter,
+    Underline,
+    Dollar,
+    WHITESPACE,
+    SPACE_SEPARATOR,
+    NEWLINE,
+    CR,
+    LF,
 }
 #[automatically_derived]
 #[allow(unused_qualifications)]
@@ -53,8 +64,8 @@ impl ::std::fmt::Debug for Rule {
                 let mut debug_trait_builder = f.debug_tuple("statement");
                 debug_trait_builder.finish()
             }
-            (&Rule::empty_statement,) => {
-                let mut debug_trait_builder = f.debug_tuple("empty_statement");
+            (&Rule::EmptyStatement,) => {
+                let mut debug_trait_builder = f.debug_tuple("EmptyStatement");
                 debug_trait_builder.finish()
             }
             (&Rule::eos,) => {
@@ -73,8 +84,8 @@ impl ::std::fmt::Debug for Rule {
                 let mut debug_trait_builder = f.debug_tuple("Comma");
                 debug_trait_builder.finish()
             }
-            (&Rule::declare_statement,) => {
-                let mut debug_trait_builder = f.debug_tuple("declare_statement");
+            (&Rule::DeclareStatement,) => {
+                let mut debug_trait_builder = f.debug_tuple("DeclareStatement");
                 debug_trait_builder.finish()
             }
             (&Rule::Boolean,) => {
@@ -95,6 +106,46 @@ impl ::std::fmt::Debug for Rule {
             }
             (&Rule::Undefined,) => {
                 let mut debug_trait_builder = f.debug_tuple("Undefined");
+                debug_trait_builder.finish()
+            }
+            (&Rule::SYMBOL,) => {
+                let mut debug_trait_builder = f.debug_tuple("SYMBOL");
+                debug_trait_builder.finish()
+            }
+            (&Rule::NameCharacter,) => {
+                let mut debug_trait_builder = f.debug_tuple("NameCharacter");
+                debug_trait_builder.finish()
+            }
+            (&Rule::NameStartCharacter,) => {
+                let mut debug_trait_builder = f.debug_tuple("NameStartCharacter");
+                debug_trait_builder.finish()
+            }
+            (&Rule::Underline,) => {
+                let mut debug_trait_builder = f.debug_tuple("Underline");
+                debug_trait_builder.finish()
+            }
+            (&Rule::Dollar,) => {
+                let mut debug_trait_builder = f.debug_tuple("Dollar");
+                debug_trait_builder.finish()
+            }
+            (&Rule::WHITESPACE,) => {
+                let mut debug_trait_builder = f.debug_tuple("WHITESPACE");
+                debug_trait_builder.finish()
+            }
+            (&Rule::SPACE_SEPARATOR,) => {
+                let mut debug_trait_builder = f.debug_tuple("SPACE_SEPARATOR");
+                debug_trait_builder.finish()
+            }
+            (&Rule::NEWLINE,) => {
+                let mut debug_trait_builder = f.debug_tuple("NEWLINE");
+                debug_trait_builder.finish()
+            }
+            (&Rule::CR,) => {
+                let mut debug_trait_builder = f.debug_tuple("CR");
+                debug_trait_builder.finish()
+            }
+            (&Rule::LF,) => {
+                let mut debug_trait_builder = f.debug_tuple("LF");
                 debug_trait_builder.finish()
             }
         }
@@ -194,7 +245,11 @@ impl ::pest::Parser<Rule> for Parser {
                 pub fn skip(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    Ok(state)
+                    if state.atomicity() == ::pest::Atomicity::NonAtomic {
+                        state.repeat(|state| super::visible::WHITESPACE(state))
+                    } else {
+                        Ok(state)
+                    }
                 }
             }
             pub mod visible {
@@ -230,9 +285,9 @@ impl ::pest::Parser<Rule> for Parser {
                 pub fn statement(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    self::empty_statement(state).or_else(|state| {
+                    self::EmptyStatement(state).or_else(|state| {
                         state.sequence(|state| {
-                            self::declare_statement(state)
+                            self::DeclareStatement(state)
                                 .and_then(|state| super::hidden::skip(state))
                                 .and_then(|state| state.optional(|state| self::eos(state)))
                         })
@@ -240,10 +295,10 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
-                pub fn empty_statement(
+                pub fn EmptyStatement(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    self::eos(state)
+                    state.rule(Rule::EmptyStatement, |state| self::eos(state))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -279,7 +334,7 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
-                pub fn declare_statement(
+                pub fn DeclareStatement(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
                     self::Undefined(state)
@@ -340,11 +395,114 @@ impl ::pest::Parser<Rule> for Parser {
                     })
                 }
                 #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn SOI(
+                #[allow(non_snake_case, unused_variables)]
+                pub fn SYMBOL(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.start_of_input()
+                    state.rule(Rule::SYMBOL, |state| {
+                        state.atomic(::pest::Atomicity::Atomic, |state| {
+                            state.sequence(|state| {
+                                self::NameStartCharacter(state).and_then(|state| {
+                                    state.repeat(|state| self::NameCharacter(state))
+                                })
+                            })
+                        })
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn NameCharacter(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    self::ASCII_DIGIT(state).or_else(|state| self::NameStartCharacter(state))
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn NameStartCharacter(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    self::Dollar(state)
+                        .or_else(|state| self::Underline(state))
+                        .or_else(|state| self::ASCII_ALPHA(state))
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn Underline(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::Underline, |state| {
+                        state.atomic(::pest::Atomicity::Atomic, |state| state.match_string("_"))
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn Dollar(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::Dollar, |state| {
+                        state.atomic(::pest::Atomicity::Atomic, |state| state.match_string("$"))
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn WHITESPACE(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.atomic(::pest::Atomicity::Atomic, |state| {
+                        self::NEWLINE(state).or_else(|state| self::SPACE_SEPARATOR(state))
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn SPACE_SEPARATOR(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::SPACE_SEPARATOR, |state| {
+                        state
+                            .match_string(" ")
+                            .or_else(|state| state.match_string("\t"))
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn NEWLINE(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::NEWLINE, |state| {
+                        state.atomic(::pest::Atomicity::Atomic, |state| {
+                            state
+                                .sequence(|state| self::CR(state).and_then(|state| self::LF(state)))
+                                .or_else(|state| self::CR(state))
+                                .or_else(|state| self::LF(state))
+                        })
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn CR(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::CR, |state| {
+                        state.atomic(::pest::Atomicity::Atomic, |state| state.match_string("\r"))
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn LF(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::LF, |state| {
+                        state.atomic(::pest::Atomicity::Atomic, |state| state.match_string("\n"))
+                    })
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ASCII_ALPHA(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state
+                        .match_range('a'..'z')
+                        .or_else(|state| state.match_range('A'..'Z'))
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -353,23 +511,47 @@ impl ::pest::Parser<Rule> for Parser {
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
                     state.rule(Rule::EOI, |state| state.end_of_input())
                 }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn SOI(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.start_of_input()
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ASCII_DIGIT(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_range('0'..'9')
+                }
             }
             pub use self::visible::*;
         }
         ::pest::state(input, |state| match rule {
             Rule::program => rules::program(state),
             Rule::statement => rules::statement(state),
-            Rule::empty_statement => rules::empty_statement(state),
+            Rule::EmptyStatement => rules::EmptyStatement(state),
             Rule::eos => rules::eos(state),
             Rule::comma_or_semi => rules::comma_or_semi(state),
             Rule::Semicolon => rules::Semicolon(state),
             Rule::Comma => rules::Comma(state),
-            Rule::declare_statement => rules::declare_statement(state),
+            Rule::DeclareStatement => rules::DeclareStatement(state),
             Rule::Boolean => rules::Boolean(state),
             Rule::True => rules::True(state),
             Rule::False => rules::False(state),
             Rule::Null => rules::Null(state),
             Rule::Undefined => rules::Undefined(state),
+            Rule::SYMBOL => rules::SYMBOL(state),
+            Rule::NameCharacter => rules::NameCharacter(state),
+            Rule::NameStartCharacter => rules::NameStartCharacter(state),
+            Rule::Underline => rules::Underline(state),
+            Rule::Dollar => rules::Dollar(state),
+            Rule::WHITESPACE => rules::WHITESPACE(state),
+            Rule::SPACE_SEPARATOR => rules::SPACE_SEPARATOR(state),
+            Rule::NEWLINE => rules::NEWLINE(state),
+            Rule::CR => rules::CR(state),
+            Rule::LF => rules::LF(state),
             Rule::EOI => rules::EOI(state),
         })
     }
