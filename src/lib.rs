@@ -2,6 +2,7 @@
 #![feature(structural_match)]
 #![feature(rustc_attrs)]
 #![feature(core_intrinsics)]
+#![feature(int_error_matching)]
 
 extern crate pest;
 #[macro_use]
