@@ -12,8 +12,10 @@ extern crate colored;
 
 mod ast;
 mod parser;
+mod vm;
 #[allow(unused_imports)]
 pub mod utils;
+mod value;
 
 pub use ast::AST;
 pub use parser::{Parser, Rule};

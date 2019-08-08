@@ -2,7 +2,7 @@
 pub enum AST {
     /// - `null`: It doesn't look like anything to me
     Null,
-    /// - `undefined`: It just like a dream
+    /// - `undefined`: It just likes a dream
     Undefined,
 
     /// - `String`: A rust standard string
@@ -20,7 +20,7 @@ pub enum AST {
     Function(),
 
     Array(Vec<AST>),
-    Hashmap(),
+    Hashmap(Vec<(AST, AST)>),
 
     /// - `Stack`: ???
     Stack(Vec<AST>), // not slice!
