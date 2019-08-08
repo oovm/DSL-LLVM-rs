@@ -38,6 +38,7 @@ pub fn parse(s: &str) -> AST {
         match pair.as_rule() {
             Rule::EOI => (),
             Rule::Integer => push!(parse_integer),
+            Rule::Byte_OCT | Rule::Byte_BIN | Rule::Byte_HEX => push!(parse_byte),
             Rule::Decimal | Rule::DecimalBad | Rule::Exponent => push!(parse_float),
             Rule::SingleEscape | Rule::DoubleEscape => push!(parse_string),
             Rule::SYMBOL => push!(parse_symbol),
@@ -50,6 +51,30 @@ pub fn parse(s: &str) -> AST {
 fn parse_integer(pair: Pair<Rule>) -> AST {
     let s = pair.as_str();
     match i64::from_str(s) {
+        Ok(a) => AST::Integer(a),
+        Err(e) => {
+            println!(
+                "ParseError: {} is {:?} at {:?}",
+                s,
+                e.kind(),
+                pair.as_span().start_pos()
+            );
+            panic!(e)
+        }
+    }
+}
+
+fn parse_byte(pair: Pair<Rule>) -> AST {
+    let s = pair.as_str();
+    let base = s.chars().nth(1).unwrap();
+    let num = &s[2..s.len()];
+    let r = match base {
+        'x' | 'X' => i64::from_str_radix(num, 16),
+        'o' | 'O' => i64::from_str_radix(num, 8),
+        'b' | 'B' => i64::from_str_radix(num, 2),
+        _ => unreachable!(),
+    };
+    match r {
         Ok(a) => AST::Integer(a),
         Err(e) => {
             println!(

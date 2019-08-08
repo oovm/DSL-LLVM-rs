@@ -58,14 +58,14 @@ fn integer_0x() {
 
 #[test]
 fn integer_0o() {
-    const TEXT: &str = "0x07";
+    const TEXT: &str = "0o07";
     token_print(TEXT, Rule::program);
     //panic!()
 }
 
 #[test]
 fn integer_0b() {
-    const TEXT: &str = "0x01";
+    const TEXT: &str = "0b01";
     token_print(TEXT, Rule::program);
     //panic!()
 }

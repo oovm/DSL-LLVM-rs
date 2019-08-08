@@ -51,23 +51,23 @@ fn integer_leading_zero() {
 
 #[test]
 fn integer_0x() {
-    const TEXT: &str = "0x0f";
-    parse(TEXT);
-    //panic!()
+    const TEXT: &str = "0xff";
+    let result = AST::Stack([AST::from(255)].to_vec());
+    assert_eq!(parse(TEXT), result)
 }
 
 #[test]
 fn integer_0o() {
-    const TEXT: &str = "0x07";
-    parse(TEXT);
-    //panic!()
+    const TEXT: &str = "0o77";
+    let result = AST::Stack([AST::from(63)].to_vec());
+    assert_eq!(parse(TEXT), result)
 }
 
 #[test]
 fn integer_0b() {
-    const TEXT: &str = "0x01";
-    parse(TEXT);
-    //panic!()
+    const TEXT: &str = "0b11";
+    let result = AST::Stack([AST::from(3)].to_vec());
+    assert_eq!(parse(TEXT), result)
 }
 
 #[test]
