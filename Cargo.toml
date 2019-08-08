@@ -1,0 +1,29 @@
+[package]
+name = "dsl-to-llvm-example"
+version = "0.0.1"
+
+
+[lib]
+crate-type = ["dylib", "rlib"]
+name =  "typescript"
+path = "src/lib.rs"
+
+#[[bin]]
+#name = "comrak"
+#required-features = ["clap"]
+#doc = false
+
+[dependencies]
+pest = "2"
+pest_derive = "2"
+colored ={version= "1.8.0",optional=true}
+
+[dev-dependencies]
+
+[features]
+default = ["colored"]
+
+
+[profile.release]
+lto = true
+opt-level = "s"
