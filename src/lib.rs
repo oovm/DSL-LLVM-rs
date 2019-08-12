@@ -9,8 +9,10 @@ extern crate pest;
 extern crate pest_derive;
 #[cfg(feature = "colored")]
 extern crate colored;
+extern crate inkwell;
 
 mod ast;
+mod compiler;
 mod parser;
 #[allow(unused_imports)]
 pub mod utils;

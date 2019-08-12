@@ -1,4 +1,6 @@
-use crate::value::Any;
+use crate::value::{Any, FnAny, FnType};
+use std::any::TypeId;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
@@ -7,6 +9,7 @@ use std::fmt::{self, Display, Formatter};
 pub enum ErrorCode {
     Return(Box<dyn Any>),
     LoopBreak,
+    // TODO: Catch ParseError and format
     FunctionNotFound(String),
     VariableNotFound(String),
 }
@@ -39,3 +42,14 @@ impl Error for ErrorCode {
         None
     }
 }
+
+/// `VirtualMachine`: Where saves the functions and types
+#[allow(dead_code)]
+pub struct VirtualMachine {
+    pub functions: HashMap<FnType, Box<FnAny>>,
+    pub types: HashMap<TypeId, String>,
+}
+
+/// `Scope`: Where saves variable
+#[allow(dead_code)]
+pub type Scope = Vec<(String, Box<dyn Any>)>;
