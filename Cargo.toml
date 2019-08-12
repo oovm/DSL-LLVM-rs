@@ -8,14 +8,10 @@ crate-type = ["dylib", "rlib"]
 name =  "typescript"
 path = "src/lib.rs"
 
-#[[bin]]
-#name = "comrak"
-#required-features = ["clap"]
-#doc = false
-
 [dependencies]
 pest = "2.1.1"
 pest_derive = "2.1.0"
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "llvm8-0" }
 colored ={version= "1.8.0",optional=true}
 
 [dev-dependencies]
