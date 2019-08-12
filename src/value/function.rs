@@ -1,6 +1,6 @@
-use std::any::TypeId;
 use super::Any;
 use crate::vm::ErrorCode;
+use std::any::TypeId;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct FnType {
