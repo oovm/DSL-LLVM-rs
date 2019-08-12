@@ -2,6 +2,7 @@ extern crate inkwell;
 
 use inkwell::context::Context;
 
+
 #[test]
 fn create_str() {
     let context = Context::create();
@@ -11,6 +12,18 @@ fn create_str() {
     let c_str = vec.get_string_constant();
     assert_eq!(c_str.to_str().unwrap(), "new_string");
 }
+
+
+#[test]
+fn create_bool() {
+    let context = Context::create();
+    // bool is a kind of Int in llvm
+    let bool_type = context.bool_type();
+    let bool_value = bool_type.const_int(1, false);
+    // which bit width = 1
+    assert_eq!(bool_type.get_bit_width(), 1);
+}
+
 
 #[test]
 fn create_i64() {
@@ -29,4 +42,16 @@ fn create_f64() {
     assert!(f64_value.is_const());
     let c = f64_value.get_constant().unwrap();
     assert_eq!(c, (3.14, false));
+}
+
+#[test]
+fn create_struct() {
+    let context = Context::create();
+    let f32_type = context.f32_type();
+    let i16_type = context.i16_type();
+    let f32_one = f32_type.const_float(1.);
+    let i16_two = i16_type.const_int(2, false);
+    let const_struct = context.const_struct(&[i16_two.into(), f32_one.into()], true);
+
+    assert_eq!(const_struct.get_type().get_field_types(), &[i16_type.into(), f32_type.into()]);
 }
