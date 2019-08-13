@@ -1,9 +1,9 @@
 program = _{SOI~statement* ~ EOI}
 statement = _{
-    EmptyStatement
-  | DeclareStatement ~eos?
-  | literal ~ eos?
-}
+             EmptyStatement
+             | DeclareStatement ~eos?
+             | literal ~ eos?
+             }
 /*====================================================================================================================*/
 EmptyStatement = {eos}
 eos = {Semicolon}
@@ -11,7 +11,20 @@ comma_or_semi = _{Comma|Semicolon}
 Semicolon = @{";"}
 Comma = @{","}
 /*====================================================================================================================*/
-DeclareStatement = _{Undefined}
+//!#C678DD: VariableKind
+DeclareStatement = {VariableKind ~ TypeHinted ~ Set ~ Expression}
+VariableKind = @{Let|Var|Const}
+Let = @{"Let"}
+Var = @{"var"}
+Const = @{"const"}
+/*====================================================================================================================*/
+FunctionStatement = {Def~ SYMBOL ~ Set ~ "{"~ Expression ~"}"}
+Def = @{"function"}
+/*====================================================================================================================*/
+Expression = {data}
+/*====================================================================================================================*/
+TypeHinted = {SYMBOL~(Colon~TypeExpression)?}
+TypeExpression = {""}
 /*====================================================================================================================*/
 data = {literal}
 literal = _{Boolean|Null|Undefined|Byte|Number|SYMBOL|String}
@@ -63,3 +76,57 @@ SPACE_SEPARATOR = {" "|"\t"}
 NEWLINE = @{CR ~ LF|CR|LF}
 CR = @{"\r"}
 LF = @{"\n"}
+/*====================================================================================================================*/
+//!#56B6C2: Prefix|Infix|Postfix
+Prefix = @{Plus|Increase|Decrease}
+Postfix = @{"!"}
+Infix = @{o_add|o_times}
+
+Or = @{"|"}
+LazyOr = @{"||"}
+Set = @{"="}
+Colon = @{":"}
+Star = @{"*"}
+Slash = @{"/"}
+Proportion = @{"::"|"∷"}//U+2237
+Separate = @{";;"}
+Question = @{"?"}
+
+Import = @{"<<<"|"⋘"} //U+22D8
+Export = @{">>>"|"⋙"}    //U+22D9
+LeftShift = @{"<<"|"≪"}  //U+226A
+RightShift = @{">>"|"≫"}   //U+226B
+LessEqual = @{"<="}
+GraterEqual = @{">="}
+Less = @{"<"}
+Grater = @{">"}
+
+Equivalent = @{"==="}
+NotEquivalent = @{"=!="}
+Equal = @{"=="}
+NotEqual = @{"!="|"≠"} //U+2260
+
+o_add = _{Plus|Minus}
+Plus = @{"+"}
+Minus = @{"-"}
+o_times = _{Multiply|CenterDot|Divide|Quotient |Modulo  }
+Multiply = @{Star | "×"}  //U+00D7
+CenterDot = @{"⋅"}   //U+22C5
+Divide = @{Slash | "÷"}  //U+00F7
+Quotient = @{"//"}
+Modulo = @{"%"}
+
+o_power = _{ Power  }
+Power = @{"^"}
+
+Increase = @{"++"}
+Decrease = @{"--"}
+To = @{"->"}
+Quote = @{"`"}
+Acute = @{"´"} // U+00B4
+
+LogicOr = @{"||"|"∧"}   //U+2227
+LogicAnd = @{"&&"|"∨"}   //U+2228
+LogicNot = @{"¬"}   //U+00AC
+
+Ellipsis = @{"..."|"…"} // U+2026
