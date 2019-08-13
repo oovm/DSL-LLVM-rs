@@ -21,15 +21,39 @@ Const = @{"const"}
 FunctionStatement = {Def~ SYMBOL ~ Set ~ "{"~ expr ~"}"}
 Def = @{"function"}
 /*====================================================================================================================*/
+//!#C678DD: Pass|Return|Break
+Pass = @{"pass"}
+Return = @{"return"}
+Break = @{"break"}
+/*====================================================================================================================*/
+if_statement = {if_nested_else|if_nested|if_single_else|if_single}
+if_single = _{ If~condition~ if_then_block}
+if_nested = _{ If~ condition~ if_then_suite ~ else_if_suite+}//FIXME: 无效语法
+if_single_else = _{ If~condition~ if_then_suite ~ Else ~ if_then_block}
+if_nested_else = _{ If~ condition~ if_then_suite~ else_if_suite+ ~Else ~ if_then_block}
+if_trinocular = _{
+                 term ~ Question ~ term ~ Colon ~ term
+                 | term ~ If ~ term ~ Else ~ term
+                 }
+else_if_suite = !{ elif ~condition~ if_nest_suite}
+else_if_block = !{ elif ~condition~ if_then_block}
+if_nest_suite = _{"{" ~ statement+ ~ "}"}
+if_then_suite = _{"{" ~ statement+ ~ "}"}
+if_then_block = _{"{" ~ statement+ ~ "}"}
+elif = _{Else ~ If}
+if_forbidden = _{If|Else|elif}
+//!#C678DD: Ef|If|Else
+If = @{"if"}
+Else = @{"else"}
 /*====================================================================================================================*/
 expr = !{
         term ~ (!NEWLINE~ slice)
         | trinoculars
         | term ~ (Infix ~ term)*
         }
-term =  { Prefix* ~ node ~ Postfix* }
+term = { Prefix* ~ node ~ Postfix* }
 node = _{  data| "(" ~ expr ~ ")" }
-condition  = { node|expr}
+condition = { node|expr}
 expressions = {"("~expr~ ( comma_or_semi? ~ expr)* ~comma_or_semi?~")"}
 trinoculars = _{if_trinocular}
 /*====================================================================================================================*/
