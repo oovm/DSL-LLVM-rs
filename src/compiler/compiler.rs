@@ -52,7 +52,7 @@ pub struct Compiler<'a> {
     fn_value: Option<FunctionValue>,
 }
 
-impl Default for Compiler {
+impl<'a> Default for Compiler<'a> {
     fn default() -> Self {
         let context = Context::create();
         let builder = context.create_builder();
@@ -99,6 +99,56 @@ impl<'a> Compiler<'a> {
             None => builder.position_at_end(&entry),
         }
         builder.build_alloca(self.context.f64_type(), name)
+    }
+
+    fn create_prototype(&self, f: &Prototype) -> Result<FunctionValue, &'static str> {
+        let ret_type = self.context.f64_type();
+        let args_types: Vec<BasicTypeEnum> = std::iter::repeat(ret_type)
+            .take(f.args.len())
+            .map(|f| f.into())
+            .collect();
+        let args_types = args_types.as_slice();
+        let fn_type = self.context.f64_type().fn_type(args_types, false);
+        let fn_value = self.module.add_function(f.name.as_str(), fn_type, None);
+        // Args
+        for (i, arg) in fn_value.get_param_iter().enumerate() {
+            arg.into_float_value().set_name(f.args[i].as_str());
+        }
+        Ok(fn_value)
+    }
+
+    fn create_fn(&mut self) -> Result<FunctionValue, &'static str> {
+        let proto = &self.function.prototype;
+        let function = self.create_prototype(proto)?;
+        // pass if empty
+        if self.function.body.is_none() {
+            return Ok(function);
+        }
+        // add entry
+        let entry = self.context.append_basic_block(&function, "entry");
+        self.builder.position_at_end(&entry);
+        self.fn_value = Some(function);
+        self.variables.reserve(proto.args.len());
+        // add args
+        for (i, arg) in function.get_param_iter().enumerate() {
+            let arg_name = proto.args[i].as_str();
+            let alloc = self.create_allocation(arg_name);
+            self.builder.build_store(alloc, arg);
+            self.variables.insert(proto.args[i].clone(), alloc);
+        }
+        // compile body
+        let body = self.compile_ast(self.function.body.as_ref().unwrap())?;
+        self.builder.build_return(Some(&body));
+        // delete if verify failed
+        if function.verify(true) {
+            self.fpm.run_on(&function);
+            Ok(function)
+        } else {
+            unsafe {
+                function.delete();
+            }
+            Err("Invalid generated function.")
+        }
     }
 
     fn compile_ast(&mut self, expr: &AST) -> Result<BasicValueEnum, &'static str> {

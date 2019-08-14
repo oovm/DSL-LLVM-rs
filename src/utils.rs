@@ -1,13 +1,11 @@
 #[allow(unused_imports)]
 use crate::{Parser, Rule, AST};
-#[cfg(feature = "colored")]
 use colored::*;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser as Pest;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
-#[cfg(feature = "colored")]
 pub fn token_print(s: &str, rule: Rule) {
     let pairs = Parser::parse(rule, s).unwrap_or_else(|e| panic!("{}", e));
     // Because ident_list is silent, the iterator will contain idents
