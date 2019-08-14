@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub struct Prototype {
     pub name: String,
     pub args: Vec<String>,
-    pub is_anon: bool,
+    pub is_anonymous: bool,
 }
 
 impl Default for Prototype {
@@ -20,7 +20,7 @@ impl Default for Prototype {
         Prototype {
             name: String::new(),
             args: vec![],
-            is_anon: false,
+            is_anonymous: true,
         }
     }
 }
@@ -54,11 +54,14 @@ pub struct Compiler<'a> {
 
 impl<'a> Default for Compiler<'a> {
     fn default() -> Self {
+        unimplemented!();
+        /*
         let context = Context::create();
         let builder = context.create_builder();
         let module = context.create_module("ts");
         // Create FPM
         let fpm = PassManager::create(&module);
+        let f = Function::default();
         fpm.add_instruction_combining_pass();
         fpm.add_reassociate_pass();
         fpm.add_gvn_pass();
@@ -72,11 +75,12 @@ impl<'a> Default for Compiler<'a> {
             context: &context,
             builder: &builder,
             module: &module,
-            function: &Function::default(),
+            function: &f,
             fpm: &fpm,
             variables: HashMap::new(),
             fn_value: None,
         }
+        */
     }
 }
 
@@ -98,17 +102,20 @@ impl<'a> Compiler<'a> {
             Some(first_instr) => builder.position_before(&first_instr),
             None => builder.position_at_end(&entry),
         }
-        builder.build_alloca(self.context.f64_type(), name)
+        builder.build_alloca(self.context.i64_type(), name)
     }
 
     fn create_prototype(&self, f: &Prototype) -> Result<FunctionValue, &'static str> {
-        let ret_type = self.context.f64_type();
+        //ret_type: BasicTypeEnum
+        let ret_type = self.context.i64_type();
         let args_types: Vec<BasicTypeEnum> = std::iter::repeat(ret_type)
             .take(f.args.len())
             .map(|f| f.into())
             .collect();
-        let args_types = args_types.as_slice();
-        let fn_type = self.context.f64_type().fn_type(args_types, false);
+        let fn_type = self
+            .context
+            .i64_type()
+            .fn_type(args_types.as_slice(), false);
         let fn_value = self.module.add_function(f.name.as_str(), fn_type, None);
         // Args
         for (i, arg) in fn_value.get_param_iter().enumerate() {
@@ -153,19 +160,47 @@ impl<'a> Compiler<'a> {
 
     fn compile_ast(&mut self, expr: &AST) -> Result<BasicValueEnum, &'static str> {
         match *expr {
-            AST::Decimal(ref x) => {
-                let v = self.context.f64_type().const_float(*x);
+            AST::Decimal(x) => {
+                let v = self.context.f64_type().const_float(x);
                 Ok(BasicValueEnum::FloatValue(v))
             }
-            AST::Integer(ref i) => {
-                let v = self.context.i64_type().const_int(*i as u64, false);
+            AST::Integer(i) => {
+                let v = self.context.i64_type().const_int(i as u64, false);
                 Ok(BasicValueEnum::IntValue(v))
+            }
+            AST::Boolean(b) => {
+                let v = self.context.bool_type().const_int(b as u64, false);
+                Ok(BasicValueEnum::IntValue(v))
+            }
+            AST::String(ref s) => {
+                let v = self.context.const_string(s, false);
+                Ok(BasicValueEnum::VectorValue(v))
             }
             AST::Symbol(ref name) => {
                 let v = self.variables.get(name.as_str());
                 match v {
                     Some(var) => Ok(self.builder.build_load(*var, name.as_str())),
-                    None => Err("Could not find a matching variable."),
+                    None => Err("Variable not found"),
+                }
+            }
+            AST::Infix(ref infix, ref left, ref right) => {
+                let op = infix.as_str();
+                let lhs = self.compile_ast(left.as_ref())?;
+                let rhs = self.compile_ast(right.as_ref())?;
+                // may int
+                match op {
+                    "+" => Ok(self.builder.build_int_add(lhs, rhs, "i_add")),
+                    "-" => Ok(self.builder.build_int_sub(lhs, rhs, "i_sub")),
+                    "=" => {
+                        // handle assignement
+                        let var = self
+                            .variables
+                            .get(lhs.as_str())
+                            .ok_or("Undefined variable.")?;
+                        self.builder.build_store(*var, rhs);
+                        Ok(rhs)
+                    }
+                    _ => unimplemented!(),
                 }
             }
             _ => unimplemented!(),

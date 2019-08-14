@@ -19,6 +19,10 @@ pub enum AST {
     /// - `Function`: ???
     Function(),
 
+    Infix(String, Box<AST>, Box<AST>),
+    Prefix(String, Box<AST>),
+    Postfix(String, Box<AST>),
+
     Array(Vec<AST>),
     Hashmap(Vec<(AST, AST)>),
 
