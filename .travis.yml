@@ -4,6 +4,23 @@ rust:
   - nightly
 matrix:
   fast_finish: true
+  include:
+    - env:
+        - LLVM_VERSION=8
+      addons:
+        apt:
+          sources:
+            - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-8 main'
+              key_url: https://apt.llvm.org/llvm-snapshot.gpg.key
+            - ubuntu-toolchain-r-test
+          packages:
+            - libedit-dev
+            - g++-6
+            - llvm-8-dev
+            - clang-8
+
+
+
 #  allow_failures:
 #    - rust: nightly
 script:
