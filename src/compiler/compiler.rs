@@ -12,9 +12,17 @@ use std::collections::HashMap;
 pub struct Prototype {
     pub name: String,
     pub args: Vec<String>,
-    pub is_op: bool,
     pub is_anon: bool,
-    pub prec: usize,
+}
+
+impl Default for Prototype {
+    fn default() -> Self {
+        Prototype {
+            name: String::new(),
+            args: vec![],
+            is_anon: false,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -23,13 +31,22 @@ pub struct Function {
     pub body: Option<AST>,
 }
 
+impl Default for Function {
+    fn default() -> Self {
+        Function {
+            prototype: Prototype::default(),
+            body: None,
+        }
+    }
+}
+
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct Compiler<'a> {
     pub context: &'a Context,
     pub builder: &'a Builder,
     pub module: &'a Module,
-    //pub function: &'a Function,
+    pub function: &'a Function,
     pub fpm: &'a PassManager<FunctionValue>,
     variables: HashMap<String, PointerValue>,
     fn_value: Option<FunctionValue>,
@@ -55,6 +72,7 @@ impl Default for Compiler {
             context: &context,
             builder: &builder,
             module: &module,
+            function: &Function::default(),
             fpm: &fpm,
             variables: HashMap::new(),
             fn_value: None,
@@ -83,7 +101,7 @@ impl<'a> Compiler<'a> {
         builder.build_alloca(self.context.f64_type(), name)
     }
 
-    fn compile(&mut self, expr: &AST) -> Result<BasicValueEnum, &'static str> {
+    fn compile_ast(&mut self, expr: &AST) -> Result<BasicValueEnum, &'static str> {
         match *expr {
             AST::Decimal(ref x) => {
                 let v = self.context.f64_type().const_float(*x);
