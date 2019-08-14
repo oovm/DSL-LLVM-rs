@@ -4,7 +4,7 @@ use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::passes::PassManager;
 use inkwell::types::BasicTypeEnum;
-use inkwell::values::{BasicValueEnum, FloatValue, FunctionValue, PointerValue};
+use inkwell::values::{BasicValueEnum, FloatValue, FunctionValue, IntValue, PointerValue};
 use inkwell::{FloatPredicate, OptimizationLevel};
 use std::collections::HashMap;
 
@@ -30,6 +30,12 @@ pub struct Compiler<'a> {
 
 type ReturnValueType<T> = Result<T, &'static str>;
 
+pub enum IR {
+    Void,
+    Decimal(FloatValue),
+    Integer(IntValue),
+}
+
 impl<'a> Compiler<'a> {
     #[inline]
     fn get_function(&self, name: &str) -> Option<FunctionValue> {
@@ -51,13 +57,28 @@ impl<'a> Compiler<'a> {
         builder.build_alloca(self.context.f64_type(), name)
     }
 
-    fn register_value(&mut self, expr: &AST) {
+    fn compiler(&mut self, expr: &AST) -> Result<BasicValueEnum, &'static str> {
         match *expr {
-            AST::Decimal(ref x) => self.context.f64_type().const_float(*x),
-            _ => {
-                println!("unimplemented {:?}", expr);
-                self.context.f64_type().const_zero()
+            AST::Decimal(ref x) => {
+                let v = self.context.f64_type().const_float(*x);
+                Ok(BasicValueEnum::FloatValue(v))
             }
-        };
+            AST::Integer(ref i) => {
+                let v = self.context.i64_type().const_int(*i as u64, false);
+                OK(BasicValueEnum::IntValue(v))
+            }
+            AST::Symbol(ref name) => match self.variables.get(name.as_str()) {
+                Some(var) => {
+                    let s = self.builder.build_load(*var, name.as_str());
+                    match s.get_type() {
+                        BasicTypeEnum::IntType => Ok(BasicValueEnum::IntValue(s.into_int_value())),
+                        BasicTypeEnum::FloatType => Ok(BasicValueEnum::FloatValue(s.into_float_value())),
+                        _ => unimplemented!(),
+                    }
+                }
+                None => Err("Could not find a matching variable."),
+            },
+            _ => unimplemented!(),
+        }
     }
 }
