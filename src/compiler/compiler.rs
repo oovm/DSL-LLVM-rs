@@ -9,31 +9,57 @@ use inkwell::{FloatPredicate, OptimizationLevel};
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct Function {
+pub struct Prototype {
     pub name: String,
     pub args: Vec<String>,
     pub is_op: bool,
-    pub prec: usize,
     pub is_anon: bool,
+    pub prec: usize,
 }
 
 #[derive(Debug)]
+pub struct Function {
+    pub prototype: Prototype,
+    pub body: Option<AST>,
+}
+
+#[derive(Debug)]
+#[allow(dead_code)]
 pub struct Compiler<'a> {
     pub context: &'a Context,
     pub builder: &'a Builder,
     pub module: &'a Module,
-    pub function: &'a Function,
+    //pub function: &'a Function,
     pub fpm: &'a PassManager<FunctionValue>,
     variables: HashMap<String, PointerValue>,
     fn_value: Option<FunctionValue>,
 }
 
-type ReturnValueType<T> = Result<T, &'static str>;
-
-pub enum IR {
-    Void,
-    Decimal(FloatValue),
-    Integer(IntValue),
+impl Default for Compiler {
+    fn default() -> Self {
+        let context = Context::create();
+        let builder = context.create_builder();
+        let module = context.create_module("ts");
+        // Create FPM
+        let fpm = PassManager::create(&module);
+        fpm.add_instruction_combining_pass();
+        fpm.add_reassociate_pass();
+        fpm.add_gvn_pass();
+        fpm.add_cfg_simplification_pass();
+        fpm.add_basic_alias_analysis_pass();
+        fpm.add_promote_memory_to_register_pass();
+        fpm.add_instruction_combining_pass();
+        fpm.add_reassociate_pass();
+        fpm.initialize();
+        Compiler {
+            context: &context,
+            builder: &builder,
+            module: &module,
+            fpm: &fpm,
+            variables: HashMap::new(),
+            fn_value: None,
+        }
+    }
 }
 
 impl<'a> Compiler<'a> {
@@ -57,7 +83,7 @@ impl<'a> Compiler<'a> {
         builder.build_alloca(self.context.f64_type(), name)
     }
 
-    fn compiler(&mut self, expr: &AST) -> Result<BasicValueEnum, &'static str> {
+    fn compile(&mut self, expr: &AST) -> Result<BasicValueEnum, &'static str> {
         match *expr {
             AST::Decimal(ref x) => {
                 let v = self.context.f64_type().const_float(*x);
@@ -65,19 +91,15 @@ impl<'a> Compiler<'a> {
             }
             AST::Integer(ref i) => {
                 let v = self.context.i64_type().const_int(*i as u64, false);
-                OK(BasicValueEnum::IntValue(v))
+                Ok(BasicValueEnum::IntValue(v))
             }
-            AST::Symbol(ref name) => match self.variables.get(name.as_str()) {
-                Some(var) => {
-                    let s = self.builder.build_load(*var, name.as_str());
-                    match s.get_type() {
-                        BasicTypeEnum::IntType => Ok(BasicValueEnum::IntValue(s.into_int_value())),
-                        BasicTypeEnum::FloatType => Ok(BasicValueEnum::FloatValue(s.into_float_value())),
-                        _ => unimplemented!(),
-                    }
+            AST::Symbol(ref name) => {
+                let v = self.variables.get(name.as_str());
+                match v {
+                    Some(var) => Ok(self.builder.build_load(*var, name.as_str())),
+                    None => Err("Could not find a matching variable."),
                 }
-                None => Err("Could not find a matching variable."),
-            },
+            }
             _ => unimplemented!(),
         }
     }
